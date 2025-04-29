@@ -1,17 +1,20 @@
 <launch>
 
-<!-- Set DISPLAY environment variable - HENRIETTE NEEDS TO DO THIS; YOU DONT-->
-<env name="DISPLAY" value="novnc:0.0" />
+    <!-- Set DISPLAY environment variable - HENRIETTE NEEDS TO DO THIS; YOU DONT-->
+    <env name="DISPLAY" value="novnc:0.0" />
 
-<!-- Start odometer node -->
-    <node pkg="first_project" type="odometer" name="odometer" output="screen" />
+    <!-- Start odometer node -->
+    <node pkg="first_project" type="odometer" name="odometer" output="screen">
+        <param name="wheelbase" value="1.765" />
+        <param name="steering_factor" value="32" />
+    </node>
 
     <!-- Start gps_odometer node with reference GPS parameters - first published values of project.bag -->
     <node pkg="first_project" type="gps_odometer" name="gps_odometer" output="screen">
         <param name="lat_r" value="45.618932386592405" />
         <param name="lon_r" value="9.281178887031235" />
         <param name="alt_r" value="229.04906147731415" />
-    </node>
+    </node> 
 
     <!-- Start sector_times node -->
     <node pkg="first_project" type="sector_times" name="sector_times" output="screen" />

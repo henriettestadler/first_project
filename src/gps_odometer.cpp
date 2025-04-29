@@ -5,21 +5,37 @@
 #include <tf/tf.h>
 #include <cmath>
 
+/*
+INPUT: 
+- topic name: /swiftnav/front/gps_pose
+	- type: sensor_msgs/NavSatFix
+		- Lat, Long, Alt
+
+OUTPUT:
+- topic: /gps_odom
+	- type: nav_msgs/Odometry -> pose (position, orientation) & twist (linear, angular)
+        - position in ENU-coordinate system (convert from lat,long,alt)
+        - orientation from ENU
+- tf: odom-gps
+*/ 
+
+
 class GpsOdometer {
 public:
     GpsOdometer() : has_reference_(false), has_last_position_(false) {
         ros::NodeHandle nh;
         ros::NodeHandle pnh("~");
 
-        // Get reference GPS coordinates from launch file or parameter server
+        // Get reference GPS coordinates from launch file
         pnh.getParam("lat_r", lat_ref_);
         pnh.getParam("lon_r", lon_ref_);
         pnh.getParam("alt_r", alt_ref_);
 
-        // Precompute reference ECEF
+        // Compute reference ECEF
         gpsToECEF(lat_ref_, lon_ref_, alt_ref_, x_ref_, y_ref_, z_ref_);
         has_reference_ = true;
 
+        // Subscribe and publish
         sub_ = nh.subscribe("/swiftnav/front/gps_pose", 10, &GpsOdometer::callback, this);
         pub_ = nh.advertise<nav_msgs::Odometry>("/gps_odom", 10);
     }
@@ -27,7 +43,7 @@ public:
     void callback(const sensor_msgs::NavSatFix::ConstPtr& msg) {
         if (!has_reference_) return;
 
-        // Convert current GPS to ECEF
+        // Convert GPS to ECEF
         double x, y, z;
         gpsToECEF(msg->latitude, msg->longitude, msg->altitude, x, y, z);
 
@@ -43,7 +59,7 @@ public:
         if (dx != 0.0 || dy != 0.0) {
             heading = std::atan2(dy, dx);
             } else {
-            heading = last_heading_; // re-use
+            heading = last_heading_; // car did not move
         }
         }
         last_enu_x_ = enu_x;
@@ -86,10 +102,9 @@ private:
     double last_enu_x_, last_enu_y_, last_heading_;
     bool has_last_position_;
 
-    // WGS84 ellipsoid constants
-    const double a = 6378137.0;
-    const double b = 6356752.0;
-    const double e_sq = (a * a - b * b) / (a * a);
+    const double a = 6378137;
+    const double b = 6356752;
+    const double e_sq = 1 - b * b / (a * a);
 
     void gpsToECEF(double lat, double lon, double alt, double& x, double& y, double& z) {
         double lat_rad = lat * M_PI / 180.0;
@@ -98,7 +113,7 @@ private:
         double N = a / sqrt(1 - e_sq * sin(lat_rad) * sin(lat_rad));
         x = (N + alt) * cos(lat_rad) * cos(lon_rad);
         y = (N + alt) * cos(lat_rad) * sin(lon_rad);
-        z = ((1 - e_sq) * N + alt) * sin(lat_rad);
+        z = (N * (1 - e_sq) + alt) * sin(lat_rad);
         }
 
     void ecefToENU(double x, double y, double z, double& enu_x, double& enu_y, double& enu_z) {
