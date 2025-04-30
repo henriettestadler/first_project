@@ -38,8 +38,6 @@ public:
         gps_sub_ = nh.subscribe("/swiftnav/front/gps_pose", 10, &SectorTimesNode::gpsCallback, this);
         speed_sub_ = nh.subscribe("/speedsteer", 10, &SectorTimesNode::speedCallback, this);
         sector_pub_ = nh.advertise<first_project::sector_times>("/sector_times", 10);
-
-        timer_ = nh.createTimer(ros::Duration(5.0), &SectorTimesNode::publishSectorStats, this);
     }
 
     void gpsCallback(const sensor_msgs::NavSatFix::ConstPtr& msg) {
@@ -70,9 +68,9 @@ public:
         last_time_ = current_time;
 
         int next_sector = (last_sector_ % 3) + 1;
+        
         if (distance2D(x, y, sector_start_enu_[next_sector - 1].x, sector_start_enu_[next_sector - 1].y) < switch_radius_) {
             // Sector change
-            publishSectorStats(ros::TimerEvent()); // Changed here
             last_sector_ = next_sector;
             sector_start_time_ = current_time;
             speed_sum_ = 0.0;
@@ -82,6 +80,12 @@ public:
                 distance_total_ = 0.0;
             }
         }
+
+        first_project::sector_times out_msg;
+        out_msg.current_sector = last_sector_;
+        out_msg.current_sector_time = (last_time_ - sector_start_time_).toSec();
+        out_msg.current_sector_mean_speed = (speed_count_ > 0) ? speed_sum_ / speed_count_ : 0.0f;
+        sector_pub_.publish(out_msg);
 
         last_x_ = x;
         last_y_ = y;
@@ -97,7 +101,7 @@ private:
     ros::Subscriber gps_sub_;
     ros::Subscriber speed_sub_;
     ros::Publisher sector_pub_;
-    ros::Timer timer_;
+    //ros::Timer timer_;
 
     // Reference GPS and ECEF
     double ref_lat_, ref_lon_, ref_alt_;
@@ -134,16 +138,6 @@ private:
 
         gpsToECEF(45.623327601927656, 9.28682809188195, 231.77824942388858, sx3, sy3, sz3);
         ecefToENU(sx3, sy3, sz3, sector_start_enu_[2].x, sector_start_enu_[2].y, sector_start_enu_[2].z); // Sector 3
-    }
-
-    void publishSectorStats(const ros::TimerEvent&) { // Corrected signature
-        if (!has_reference_ || last_sector_ < 1 || last_sector_ > 3) return;
-
-        first_project::sector_times out_msg;
-        out_msg.current_sector = last_sector_;
-        out_msg.current_sector_time = (last_time_ - sector_start_time_).toSec();
-        out_msg.current_sector_mean_speed = (speed_count_ > 0) ? speed_sum_ / speed_count_ : 0.0f;
-        sector_pub_.publish(out_msg);
     }
 
     double distance2D(double x1, double y1, double x2, double y2) {
