@@ -1,0 +1,4 @@
+Codice persona;name;surname
+11112213;Mathias;Askeland
+11067391;Henriette;Stadler
+;Felipe;Naranjo Amórtegui

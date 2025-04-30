@@ -16,15 +16,15 @@ OUTPUT:
 	- type: first_project/sector_times (custom message, create .msg file)
 
 SECTOR TIMES / END POINTS
-- 1: 0-142sec 
+- 1 - end: at 142sec 
         latitude: 45.630107929622135
         longitude: 9.2904209270337
         altitude: 238.8514007567726
-- 2: 142-262sec
+- 2 -end at 262sec
         latitude: 45.623327601927656
         longitude: 9.28682809188195
         altitude: 231.77824942388858
-- 3: 262-XXXsec (not until the complete end!)
+- 3 - end (using the very first GPS data points)
         latitude: 45.618932386592405
         longitude: 9.281178887031235
         altitude: 229.04906147731415

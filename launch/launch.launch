@@ -1,7 +1,7 @@
 <launch>
 
-    <!-- Set DISPLAY environment variable - HENRIETTE NEEDS TO DO THIS; YOU DONT-->
-    <env name="DISPLAY" value="novnc:0.0" />
+    <!-- Set DISPLAY environment variable if noVNC is used
+    <env name="DISPLAY" value="novnc:0.0" />-->
 
     <!-- Start odometer node -->
     <node pkg="first_project" type="odometer" name="odometer" output="screen">

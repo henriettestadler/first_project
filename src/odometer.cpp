@@ -80,8 +80,8 @@ public:
         odom.header.frame_id = "odom";
         odom.child_frame_id = "vehicle";
 
-        odom.pose.pose.position.x = x_;
-        odom.pose.pose.position.y = y_;
+        odom.pose.pose.position.y = x_;
+        odom.pose.pose.position.x = y_;
         odom.pose.pose.position.z = 0.0;
         odom.pose.pose.orientation = tf::createQuaternionMsgFromYaw(theta_);
 
